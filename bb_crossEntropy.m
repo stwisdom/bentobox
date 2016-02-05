@@ -19,9 +19,9 @@ function ce_or_grad=bb_crossEntropy(args,parentLabelGrad)
         case 1
             %%% forward pass
     
-            logYhat=log(Yhat);
-            % get rid of -Infs if they exist:
-            logYhat(logYhat<log(realmin('single')))=log(realmin('single'));
+            logYhat=log(realmin('single')+Yhat);
+%             % get rid of -Infs if they exist:
+%             logYhat(logYhat<log(realmin('single')))=log(realmin('single'));
             ce=-sum(fxns.pagefun_marg(Y,logYhat,dim_marg),dim_time)./T;
             
             ce_or_grad=ce;

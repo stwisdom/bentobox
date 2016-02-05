@@ -1,4 +1,4 @@
-function [gradApproxRe,gradApproxIm,itest]=gradientCheck(var_indep,fxn_update_dep,update_params,del,eps,testProportion)
+function [gradApproxRe,gradApproxIm,itest]=gradientCheck(var_indep,fxn_update_dep,update_params,del,eps,testProportion,flag_nonneg)
 
     if ~exist('del','var') || isempty(del)
         del=1e-6;
@@ -10,6 +10,10 @@ function [gradApproxRe,gradApproxIm,itest]=gradientCheck(var_indep,fxn_update_de
     
     if ~exist('testProportion','var')
         testProportion=1;
+    end
+    
+    if ~exist('flag_nonneg','var')
+        flag_nonneg=0;
     end
 
     numel_indep=numel(var_indep);
@@ -68,6 +72,13 @@ function [gradApproxRe,gradApproxIm,itest]=gradientCheck(var_indep,fxn_update_de
         var_indep_minusReal = var_indep;
         var_indep_minusReal(itest(ii)) = var_indep_minusReal(itest(ii)) - del;
         
+        if flag_nonneg
+            if var_indep_minusReal(itest(ii))<0
+                 var_indep_minusReal(itest(ii))=var_indep(itest(ii));
+                 var_indep_plusReal(itest(ii))=var_indep_plusReal(itest(ii)) + del;
+            end
+        end
+        
         if flag_iscomplex_indep
             
             % add a bit to imag part:
@@ -81,7 +92,7 @@ function [gradApproxRe,gradApproxIm,itest]=gradientCheck(var_indep,fxn_update_de
         end
         
         %%% Step 2: compute values of dependent variable from perturbed
-        %%% indepdent variable:
+        %%% independent variable:
         
         var_dep_plusReal = fxn_update_dep(var_indep_plusReal,update_params);
         var_dep_minusReal = fxn_update_dep(var_indep_minusReal,update_params);

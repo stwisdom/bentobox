@@ -282,7 +282,7 @@ classdef BentoboxNetwork < handle %
                         grad_wrt_parent=childCur.runBackward(args,parentArgName);
                         
                         % accumulate gradient into parent
-                        if strmatch(parentCur.Label,'vInv_15','exact')
+                        if strmatch(parentCur.Label,'logLike','exact')
                             stuff=1;
                         end
                         parentCur.accumGradient(grad_wrt_parent);
@@ -339,7 +339,17 @@ classdef BentoboxNetwork < handle %
                 % a maximum number of numerical gradient checks is
                 % specified; change testProportion if necessary
                 maxChecks=args.maxChecks;
-                testProportion=min(floor(testProportion*numel(varIndep)),maxChecks)/numel(varIndep);
+                NtestProportion=floor(testProportion*numel(varIndep));
+                if (NtestProportion==0)
+                    NtestProportion=numel(varIndep);
+                end
+                testProportion=min(NtestProportion,maxChecks)/numel(varIndep);
+            end
+            
+            if isfield(args,'flag_nonneg')
+                flag_nonneg=args.flag_nonneg;
+            else
+                flag_nonneg=0;
             end
             
             % arguments to partial forwardPass function
@@ -353,7 +363,7 @@ classdef BentoboxNetwork < handle %
             fxn_update_dep=@(varIndep,args)bb_forwardPass_partial(varIndep,args);
             
             % perform numerical gradient checks
-            [gradApproxRef,jgradApproxImf,itest]=gradientCheck(varIndep,fxn_update_dep,args,del,eps,testProportion);
+            [gradApproxRef,jgradApproxImf,itest]=gradientCheck(varIndep,fxn_update_dep,args,del,eps,testProportion,flag_nonneg);
             
             gradApproxf=gradApproxRef;
             if isempty(jgradApproxImf)
@@ -365,7 +375,8 @@ classdef BentoboxNetwork < handle %
 
             startNodeGrad=startNode.Gradient;
             
-            gradErr=startNodeGrad(itest(:))-gradApproxf(:);
+            startNodeGradVec=startNodeGrad(:);
+            gradErr=startNodeGradVec(itest(:))-gradApproxf(:);
             fprintf('Errors for D w.r.t. %s\n',startNodeLabel);
             meanAbsGradErr = mean(abs(gradErr(:)))
             totalAbsGradErr = sum(abs(gradErr(:)))

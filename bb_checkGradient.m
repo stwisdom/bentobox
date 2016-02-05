@@ -26,6 +26,11 @@ function out=bb_checkGradient(args)
     else
         checkMaxChecks=50;
     end
+    if isfield(args,'flag_nonneg')
+        flag_nonneg=args.flag_nonneg;
+    else
+        flag_nonneg=0;
+    end
 
     
     % perform backwards pass
@@ -54,7 +59,8 @@ function out=bb_checkGradient(args)
                                    'del',checkDel,...
                                    'eps',checkEps,...
                                    'testProportion',checkTestProp,...
-                                   'maxChecks',checkMaxChecks)...
+                                   'maxChecks',checkMaxChecks,...
+                                   'flag_nonneg',flag_nonneg)...
                                 );
             bb.Flags.verbose=flag_verbose;
             if isfield(outCheck,'gradApproxIm')
